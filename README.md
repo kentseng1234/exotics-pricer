@@ -33,7 +33,11 @@ The three methods agree. That agreement is the validation step for everything th
 
 **`outputs/mc_convergence.png`.** The Monte Carlo estimate with the bridge correction lands on the closed form and the 95% band shrinks like 1/sqrt(paths). Without the bridge, Monte Carlo on a daily grid lands 5.6% below the closed form, because a daily sample of the path misses the true peak.
 
+![](outputs/mc_convergence.png)
+
 **`outputs/discrete_monitoring.png`.** Real contracts fix on a schedule, and the schedule is a big deal. Same option, same vol, same maturity:
+
+![](outputs/discrete_monitoring.png)
 
 - 1 fixing per year: 7.46 (with one fixing at expiry this is exactly an ATM vanilla put, and it prices as one)
 - quarterly: 11.72
@@ -45,6 +49,8 @@ The three methods agree. That agreement is the validation step for everything th
 Monthly monitoring is worth 24% less than continuous. This is the "messier stuff in practice" that makes the textbook formula only a starting point. The dotted line is the Broadie-Glasserman-Kou first-order correction, which shifts the continuous max down by 0.5826 * vol * sqrt(dt); it's good once you have a dozen or more fixings and poor below that.
 
 **`outputs/tree_convergence.png`.** The tree converges from below, and it converges slowly. One subtlety that cost me a failed test: an n-step tree is not the same product as an n-fixing contract. A binomial lattice can only move up or down by exactly one tick each step, and the running max of that walk sits slightly higher than the running max of a Gaussian walk with the same variance (the offset constant is 1/2 for a ±1 walk versus 0.5826 for Gaussian steps). So a 52-step tree prices at 16.79 while a true 52-fixing contract prices at 16.47 by Monte Carlo. The tree tracks the closed form shifted by beta = 1/2, which is the dotted line on the plot.
+
+![](outputs/tree_convergence.png)
 
 The practical lesson: use the tree to understand the mechanics and to price small path-dependent problems, use Monte Carlo for anything with a real fixing schedule, and use the closed form to check both.
 
@@ -71,9 +77,15 @@ Both pass, and for the base case (k = 90%, monthly resets) tree and Monte Carlo 
 
 **`outputs/ratchet_vs_ratio.png`.** The price is flat at the vanilla level until k gets to about 75%, then rises steeply. The reason is mechanical: the ratchet only does anything once the observed high exceeds K0 divided by k. At 80% the stock has to be up 25% before the strike moves at all, and under 25% vol that is uncommon within a year. At 90% it moves once the stock is up 11%, which happens often. So "lock in 80% of gains" sounds like most of the protection and costs almost nothing extra, while "lock in 100%" doubles the premium. That trade-off is what a structurer is pricing when they pick the ratchet level for a client.
 
+![](outputs/ratchet_vs_ratio.png)
+
 **`outputs/ratchet_vs_frequency.png`.** Same story as Phase 1 but now interacting with k. For the full ratchet (100%), going from annual to daily resets takes the price from 7.45 to 17.81. For the 90% ratchet the same change only moves it from 7.45 to 10.14, and for 80% it barely moves. The reset schedule matters most when the ratchet percentage is high, because that is when the strike is close to the stock and small differences in the observed high change the payoff.
 
+![](outputs/ratchet_vs_frequency.png)
+
 **`outputs/ratchet_sample_path.png`.** One simulated path. The stock peaks above 140 between reset dates, but the monthly schedule only ever observes 137, so the strike locks at 123.4 rather than 128. The option still pays 51.9 at expiry against 28.4 for a vanilla put. Worth looking at before an interview: it is the whole product in one picture.
+
+![](outputs/ratchet_sample_path.png)
 
 ### Where the tree stops being enough
 
@@ -113,11 +125,19 @@ Variations, all from the same code:
 
 **`outputs/autocall_fair_coupon.png`.** Fair annual coupon against the volatility of the underlying, for three knock-in levels. At 10% vol the coupon collapses to the bank's funding rate of 6%, because there is almost no chance of a loss and the note is just a bond. At 25% vol it is 11.5%, at 40% vol it is 23%. The headline coupon is the premium on the put the investor sold, plus the bank's funding rate. When a 12% coupon looks attractive, this chart is what it is actually paying you for.
 
+![](outputs/autocall_fair_coupon.png)
+
 **`outputs/autocall_greeks.png`.** Delta and gamma against spot, with the same note priced at two moments: mid-way between observation dates, and one day before one. Mid-period the Greeks are smooth. One day before a check date, delta spikes to over 2 shares per note at the coupon barrier (a digital payoff: $2.88 either arrives tomorrow or it doesn't), gamma flips sign across the barrier, and delta drops to zero just above the autocall level (if the note is called tomorrow, its value is a fixed cash amount and the stock no longer matters). This is the hedging problem in one picture. A desk short this note has to buy stock at 69 and sell it at 71 the day before every observation, and the hedge errors concentrate at the barriers.
+
+![](outputs/autocall_greeks.png)
 
 **`outputs/autocall_vega.png`.** Vega on the trade date, against spot. Negative everywhere: the holder is short volatility, most of all around 75 to 80 where the knock-in and the coupon barrier both bite. The bank holding the other side is long vol from a book of these notes, which is why large retail autocall issuance (Korea, Japan, and increasingly the US) shows up in index vol markets.
 
+![](outputs/autocall_vega.png)
+
 **`outputs/autocall_call_profile.png`.** Where the note ends. Half the notes are called at the first observation, and the distribution of lives is heavily front-loaded. The retail pitch of "three years of 12% coupons" is, on average, "one year of 12% coupons and then your money back", which is why these get reissued constantly.
+
+![](outputs/autocall_call_profile.png)
 
 ### Caveats that matter for Part A of the project
 
